@@ -17,7 +17,7 @@ services:
 
   # Aplikasi Moodle
   moodle:
-    image: moodle:latest
+    image: moodlemedicine-4.5.5 :latest
     container_name: moodle_appp
     environment:
       MOODLE_DATABASE_TYPE: pgsql
