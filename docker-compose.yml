@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # Database PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: moodle_postgres
+    environment:
+      POSTGRES_DB: moodle
+      POSTGRES_USER: moodleuser
+      POSTGRES_PASSWORD: moodlepassword
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    networks:
+      - moodle-network
+    restart: unless-stopped
+
+  # Aplikasi Moodle
+  moodle:
+    image: moodle:latest
+    container_name: moodle_appp
+    environment:
+      MOODLE_DATABASE_TYPE: pgsql
+      MOODLE_DATABASE_HOST: postgres
+      MOODLE_DATABASE_NAME: moodle
+      MOODLE_DATABASE_USER: moodleuser
+      MOODLE_DATABASE_PASSWORD: moodlepassword
+      MOODLE_DATABASE_PORT: 5432
+    volumes:
+      - ./moodle-data:/var/moodledata
+    depends_on:
+      - postgres
+    networks:
+      - moodle-network
+    restart: unless-stopped
+
+  # Web Server Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: moodlee_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./moodle-data:/var/moodledata:ro
+    depends_on:
+      - moodle
+    networks:
+      - moodle-network
+    restart: unless-stopped
+
+  # pgAdmin untuk management database
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: moodlee_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: adminpassword
+    ports:
+      - "8080:80"
+    volumes:
+      - ./pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - moodle-network
+    restart: unless-stopped
+
+networks:
+  moodle-network:
+    driver: bridge
